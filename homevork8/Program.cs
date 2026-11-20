@@ -1,43 +1,68 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace homevork8
 {
+    public class BankTransaction
+    {
+        public readonly DateTime TransactionDate;
+        public readonly decimal Amount;
+        public BankTransaction(decimal amount)
+        {
+            TransactionDate = DateTime.Now; 
+            Amount = amount;
+        }
+    }
     public class BankAccount
     {
         private decimal _balance;
         private string _accountType;
-        private static int _counter = 0; 
+        private static int _counter = 0;
         public string AccountNumber { get; private set; }
-        public BankAccount()
+        private Queue<BankTransaction> _transactions = new Queue<BankTransaction>();
+        public BankAccount(decimal balance = 0, string accountType = "Стандартный")
         {
             _counter++;
-            AccountNumber = $"ACC{_counter:D3}"; /
-            _balance = 0;
-            _accountType = "Стандартный";
-        }
-        public BankAccount(decimal balance) : this() 
-        {
+            AccountNumber = $"ACC{_counter:D3}";
             _balance = balance;
-        }
-        public BankAccount(string accountType, decimal balance) : this(balance)
-        {
             _accountType = accountType;
         }
-        public void PrintInfo()
+        public void Withdraw(decimal amount)
         {
-            Console.WriteLine($"Счет: {AccountNumber}, Тип: {_accountType}, Баланс: {_balance}");
+            if (_balance >= amount)
+            {
+                _balance -= amount;
+                _transactions.Enqueue(new BankTransaction(-amount));
+                Console.WriteLine($"Снято {amount}. Остаток: {_balance}");
+            }
+            else
+            {
+                Console.WriteLine("Недостаточно средств!");
+            }
+        }
+        public void Deposit(decimal amount)
+        {
+            _balance += amount;
+            _transactions.Enqueue(new BankTransaction(amount));
+            Console.WriteLine($"Пополнено {amount}. Баланс: {_balance}");
+        }
+        public void ShowTransactions()
+        {
+            Console.WriteLine("История операций:");
+            foreach (var trans in _transactions)
+            {
+                Console.WriteLine($"{trans.TransactionDate} | {trans.Amount}");
+            }
         }
     }
     class Program
     {
         static void Main()
         {
-            BankAccount acc1 = new BankAccount(); 
-            BankAccount acc2 = new BankAccount(1000); 
-            BankAccount acc3 = new BankAccount("Кредитный", 5000); 
-            acc1.PrintInfo();
-            acc2.PrintInfo();
-            acc3.PrintInfo();
+            BankAccount account = new BankAccount(100);
+            account.Deposit(50);   
+            account.Withdraw(30);
+            account.ShowTransactions();
         }
     }
 }

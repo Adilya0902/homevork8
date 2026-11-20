@@ -1,51 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 
-namespace homevork8
+namespace Task_9_1_Home
 {
-    public class BankTransaction
+    public class Song
     {
-        public readonly DateTime TransactionDate;
-        public readonly decimal Amount;
-        public BankTransaction(decimal amount)
+        public string Name { get; set; }
+        public string Author { get; set; }
+        public Song PreviousSong { get; set; } 
+        public Song(string name, string author)
         {
-            TransactionDate = DateTime.Now;
-            Amount = amount;
+            Name = name;
+            Author = author;
+            PreviousSong = null;
         }
-    }
-    public class BankAccount : IDisposable 
-    {
-        private decimal _balance;
-        public string AccountNumber { get; private set; }
-        private Queue<BankTransaction> _transactions = new Queue<BankTransaction>();
-        private static int _counter = 0;
-
-        public BankAccount(decimal balance = 0)
+        public Song(string name, string author, Song previousSong)
         {
-            _counter++;
-            AccountNumber = $"ACC{_counter:D3}";
-            _balance = balance;
+            Name = name;
+            Author = author;
+            PreviousSong = previousSong;
         }
-
-        public void Deposit(decimal amount)
+        public Song()
         {
-            _balance += amount;
-            _transactions.Enqueue(new BankTransaction(amount));
-        }
-        public void Dispose()
-        {
-            using (StreamWriter writer = new StreamWriter("bank_transactions.txt", false, Encoding.UTF8))
-            {
-                writer.WriteLine($"Отчет по счету: {AccountNumber}");
-                foreach (var trans in _transactions)
-                {
-                    writer.WriteLine($"{trans.TransactionDate} : {trans.Amount}");
-                }
-            }
-            GC.SuppressFinalize(this);
-            Console.WriteLine("Данные записаны в файл, ресурсы освобождены.");
         }
     }
 
@@ -53,13 +28,10 @@ namespace homevork8
     {
         static void Main()
         {
-            using (BankAccount acc = new BankAccount(1000))
-            {
-                acc.Deposit(500);
-                acc.Deposit(200);
-            }
-            
-            Console.WriteLine("Проверь файл bank_transactions.txt в папке с проектом.");
+            Song song1 = new Song("Владимирский централ", "Михаил Круг");
+            Song song2 = new Song("Кукла колдуна", "Король и Шут", song1);
+            Song mySong = new Song(); 
+            Console.WriteLine("Песни созданы успешно.");
         }
     }
 }

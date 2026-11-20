@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 namespace homevork8
 {
@@ -9,60 +11,55 @@ namespace homevork8
         public readonly decimal Amount;
         public BankTransaction(decimal amount)
         {
-            TransactionDate = DateTime.Now; 
+            TransactionDate = DateTime.Now;
             Amount = amount;
         }
     }
-    public class BankAccount
+    public class BankAccount : IDisposable 
     {
         private decimal _balance;
-        private string _accountType;
-        private static int _counter = 0;
         public string AccountNumber { get; private set; }
         private Queue<BankTransaction> _transactions = new Queue<BankTransaction>();
-        public BankAccount(decimal balance = 0, string accountType = "Стандартный")
+        private static int _counter = 0;
+
+        public BankAccount(decimal balance = 0)
         {
             _counter++;
             AccountNumber = $"ACC{_counter:D3}";
             _balance = balance;
-            _accountType = accountType;
         }
-        public void Withdraw(decimal amount)
-        {
-            if (_balance >= amount)
-            {
-                _balance -= amount;
-                _transactions.Enqueue(new BankTransaction(-amount));
-                Console.WriteLine($"Снято {amount}. Остаток: {_balance}");
-            }
-            else
-            {
-                Console.WriteLine("Недостаточно средств!");
-            }
-        }
+
         public void Deposit(decimal amount)
         {
             _balance += amount;
             _transactions.Enqueue(new BankTransaction(amount));
-            Console.WriteLine($"Пополнено {amount}. Баланс: {_balance}");
         }
-        public void ShowTransactions()
+        public void Dispose()
         {
-            Console.WriteLine("История операций:");
-            foreach (var trans in _transactions)
+            using (StreamWriter writer = new StreamWriter("bank_transactions.txt", false, Encoding.UTF8))
             {
-                Console.WriteLine($"{trans.TransactionDate} | {trans.Amount}");
+                writer.WriteLine($"Отчет по счету: {AccountNumber}");
+                foreach (var trans in _transactions)
+                {
+                    writer.WriteLine($"{trans.TransactionDate} : {trans.Amount}");
+                }
             }
+            GC.SuppressFinalize(this);
+            Console.WriteLine("Данные записаны в файл, ресурсы освобождены.");
         }
     }
+
     class Program
     {
         static void Main()
         {
-            BankAccount account = new BankAccount(100);
-            account.Deposit(50);   
-            account.Withdraw(30);
-            account.ShowTransactions();
+            using (BankAccount acc = new BankAccount(1000))
+            {
+                acc.Deposit(500);
+                acc.Deposit(200);
+            }
+            
+            Console.WriteLine("Проверь файл bank_transactions.txt в папке с проектом.");
         }
     }
 }
